@@ -86,6 +86,104 @@ class StatisticView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@permission_classes([])  # 允许匿名访问
+def track_visitor(request: Request):
+    """
+    记录页面访问
+    允许匿名访问，只要查看网页就算一次访问
+    """
+    try:
+        today = timezone.now().date()
+        
+        # 获取客户端IP地址
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip_address = request.META.get('REMOTE_ADDR')
+        
+        if not ip_address:
+            return Response({'message': '无法获取IP地址'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 排除本地和内网IP（可选，根据需求决定是否记录本地访问）
+        # local_ips = ['127.0.0.1', '::1', 'localhost']
+        # if ip_address in local_ips:
+        #     return Response({'message': '本地IP，跳过记录'}, status=status.HTTP_200_OK)
+        
+        # 检查今天是否已记录此IP（每天每个IP只记录一次）
+        if VisitorStatistics.objects.filter(
+            visit_date=today, 
+            ip_address=ip_address
+        ).exists():
+            return Response({'message': '今日已记录'}, status=status.HTTP_200_OK)
+        
+        # 获取地理位置信息
+        location_info = get_location_info(ip_address)
+        
+        # 创建访问记录
+        VisitorStatistics.objects.create(
+            visit_date=today,
+            ip_address=ip_address,
+            country=location_info.get('country'),
+            region=location_info.get('region'),
+            city=location_info.get('city'),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')
+        )
+        
+        return Response({'message': '访问记录成功'}, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        # 记录错误但不影响用户体验
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"访问统计记录失败: {str(e)}")
+        return Response({'message': '记录失败，但不影响访问'}, status=status.HTTP_200_OK)
+
+
+def get_location_info(ip_address):
+    """
+    获取IP地理位置信息
+    使用免费的IP地理位置API服务
+    """
+    import requests
+    location_info = {'country': None, 'region': None, 'city': None}
+    
+    try:
+        # 使用免费的ipapi.co服务
+        response = requests.get(
+            f'http://ipapi.co/{ip_address}/json/',
+            timeout=3
+        )
+        if response.status_code == 200:
+            data = response.json()
+            location_info = {
+                'country': data.get('country_name'),
+                'region': data.get('region'),
+                'city': data.get('city')
+            }
+    except Exception:
+        # 如果地理位置获取失败，尝试备用服务
+        try:
+            response = requests.get(
+                f'http://ip-api.com/json/{ip_address}?lang=zh-CN',
+                timeout=3
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    location_info = {
+                        'country': data.get('country'),
+                        'region': data.get('regionName'),
+                        'city': data.get('city')
+                    }
+        except Exception:
+            # 地理位置获取完全失败时，使用默认值
+            pass
+    
+    return location_info
+
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def debug_info(request):

@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from jcourse_api.views import *
 from jcourse_api.views.common import get_common_info, get_about_data
+from jcourse_api.views.site import track_visitor
 from jcourse_api.views.teacher_evaluation import TeacherEvaluationViewSet, TeacherWithEvaluationViewSet
 
 router = DefaultRouter()
@@ -33,6 +34,7 @@ urlpatterns = [
     path('review/<int:review_id>/revision/', ReviewRevisionView.as_view(), name='review-revision'),
     path('common/', get_common_info, name='common-info'),
     path('about/', get_about_data, name='about-data'),
+    path('track-visitor/', track_visitor, name='track-visitor'),
     path('debug/', debug_info, name='debug-info'),
     # path('upload/', FileUploadView.as_view(), name='upload'),
 ]
