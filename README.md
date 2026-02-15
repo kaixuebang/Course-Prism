@@ -6,6 +6,7 @@
 
 - [项目概述](#项目概述)
 - [技术栈](#技术栈)
+- [Docker 容器化部署（推荐）](#docker-容器化部署推荐)
 - [快速开始](#快速开始)
 - [服务器部署指南](#服务器部署指南)
 - [数据迁移指南](#数据迁移指南)
@@ -42,6 +43,140 @@
 - Redis 5.2.0 (缓存)
 - Huey 2.5.2 (任务队列)
 - Gunicorn 23.0.0 / Uvicorn 0.32.0
+
+## Docker 容器化部署（推荐）
+
+使用 Docker 容器化部署是最简单快速的方式，提供：
+- ✅ 环境一致性 - 开发、测试、生产环境完全相同
+- ✅ 一键部署 - 5分钟内完成部署
+- ✅ 易于迁移 - 支持任何云服务器
+- ✅ 简化运维 - 自动化备份、恢复、更新
+
+### 快速开始（Docker）
+
+#### 前置要求
+
+- Docker 20.10+
+- Docker Compose 2.0+ 或 `docker compose` 插件
+- 至少 2GB 可用内存
+- 至少 5GB 可用磁盘空间
+
+#### 一键部署
+
+1. **克隆项目**
+   ```bash
+   git clone https://github.com/kaixuebang/Course-Prism.git
+   cd Course-Prism
+   ```
+
+2. **配置环境变量**
+   ```bash
+   cp .env.example .env
+   nano .env  # 编辑配置
+   ```
+
+   必须修改的配置项：
+   ```bash
+   SECRET_KEY=your-super-secret-key-here  # 生成随机密钥
+   POSTGRES_PASSWORD=your-secure-password  # 数据库密码
+   ALLOWED_HOSTS=your-domain.com,www.your-domain.com  # 你的域名
+   CSRF_TRUSTED_ORIGINS=https://your-domain.com  # 你的域名（带协议）
+   ```
+
+3. **一键部署**
+   ```bash
+   chmod +x deploy.sh
+   ./deploy.sh
+   ```
+
+4. **访问应用**
+   - 前端: http://localhost
+   - 后端 API: http://localhost/api/
+   - Django Admin: http://localhost/admin/
+
+#### Docker Compose 命令
+
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 查看特定服务日志
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+# 停止服务
+docker-compose down
+
+# 重启服务
+docker-compose restart
+
+# 重新构建并启动
+docker-compose up -d --build
+
+# 进入容器
+docker-compose exec backend bash
+docker-compose exec frontend sh
+```
+
+#### 数据管理
+
+```bash
+# 备份数据库
+./backup.sh
+
+# 恢复数据库
+./restore.sh backups/db_backup_20260215_120000.sql
+
+# 运行迁移
+docker-compose exec backend python manage.py migrate
+
+# 创建超级用户
+docker-compose exec backend python manage.py createsuperuser
+
+# 收集静态文件
+docker-compose exec backend python manage.py collectstatic --noinput
+```
+
+#### 开发环境
+
+使用开发环境配置（支持热重载）：
+
+```bash
+# 启动开发环境
+docker-compose -f docker-compose.dev.yml up -d
+
+# 查看日志
+docker-compose -f docker-compose.dev.yml logs -f
+
+# 停止开发环境
+docker-compose -f docker-compose.dev.yml down
+```
+
+开发环境特点：
+- 代码热重载（修改即生效）
+- 数据库和 Redis 端口暴露到主机
+- 使用 Django runserver 而非 Gunicorn
+
+访问地址：
+- 前端: http://localhost:3000
+- 后端: http://localhost:8000
+- PostgreSQL: localhost:5432
+- Redis: localhost:6379
+
+#### 详细文档
+
+完整的 Docker 部署文档请参考 [DOCKER.md](DOCKER.md)，包含：
+- 架构说明
+- 服务配置详解
+- 网络和卷管理
+- SSL 证书配置
+- 故障排除
+- 性能优化
+
+---
 
 ## 快速开始
 
