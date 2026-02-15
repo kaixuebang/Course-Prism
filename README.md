@@ -27,27 +27,29 @@
 ## 技术栈
 
 **前端:**
-- Next.js 16 (Pages Router)
-- React 19
-- Ant Design 5
-- TypeScript
-- SWR (数据获取)
-- Axios (HTTP 客户端)
+- Next.js 16.1.6 (Pages Router)
+- React 19.2.4
+- Ant Design 6.1.0
+- TypeScript 5.7.0
+- SWR 2.3.0 (数据获取)
+- Axios 1.7.0 (HTTP 客户端)
+- Recharts 2.15.0 (图表)
 
 **后端:**
-- Django 4.2
-- Django REST Framework
-- PostgreSQL
-- Redis (缓存)
-- Huey (任务队列)
+- Django 6.0.2
+- Django REST Framework 3.16.1
+- PostgreSQL 16 (Docker)
+- Redis 5.2.0 (缓存)
+- Huey 2.5.2 (任务队列)
+- Gunicorn 23.0.0 / Uvicorn 0.32.0
 
 ## 快速开始
 
 ### 前置要求
 
-- Node.js 18+ 和 Yarn
-- Python 3.9+
-- PostgreSQL 12+
+- Node.js 18+ 和 Yarn（推荐 Node.js 20+）
+- Python 3.9+（推荐 Python 3.11+）
+- Docker 和 Docker Compose（用于 PostgreSQL）
 - Redis (可选，用于缓存)
 
 ### 本地开发
@@ -59,7 +61,35 @@ git clone https://github.com/kaixuebang/Course-Prism.git
 cd Course-Prism
 ```
 
-#### 2. 后端设置
+#### 2. 启动 PostgreSQL 和 Redis (Docker)
+
+**推荐使用 Docker Compose：**
+```bash
+# 在项目根目录，启动数据库和 Redis
+docker-compose up -d
+
+# 验证容器运行
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f
+```
+
+**或手动启动 PostgreSQL 容器：**
+```bash
+docker run -d \
+  --name jcourse-postgres \
+  -e POSTGRES_DB=jcourse \
+  -e POSTGRES_USER=jcourse \
+  -e POSTGRES_PASSWORD=jcourse \
+  -p 5432:5432 \
+  postgres:16
+
+# 验证容器运行
+docker ps | grep jcourse-postgres
+```
+
+#### 3. 后端设置
 
 ```bash
 cd backend/jcourse_api-master
@@ -75,12 +105,6 @@ pip install -r requirements.txt
 cp ../../configs/backend.env.template .env
 # 编辑 .env 文件，设置数据库密码等
 
-# 创建数据库
-sudo -u postgres createdb jcourse
-sudo -u postgres createuser jcourse
-sudo -u postgres psql -c "ALTER USER jcourse WITH PASSWORD 'jcourse';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE jcourse TO jcourse;"
-
 # 运行迁移
 python manage.py migrate
 
@@ -91,7 +115,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-#### 3. 前端设置
+#### 4. 前端设置
 
 ```bash
 cd frontend/jcourse-master
@@ -132,8 +156,12 @@ npm install -g yarn
 # 安装 Python 3 和 pip
 sudo apt install -y python3 python3-pip python3-venv
 
-# 安装 PostgreSQL
-sudo apt install -y postgresql postgresql-contrib
+# 安装 Docker 和 Docker Compose
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 
 # 安装 Redis (可选)
 sudo apt install -y redis-server
@@ -151,9 +179,32 @@ sudo chown -R $USER:$USER Course-Prism
 cd Course-Prism
 ```
 
-### 3. 数据库设置
+### 3. 数据库设置（使用 Docker）
 
 ```bash
+# 启动 PostgreSQL 容器
+docker run -d \
+  --name jcourse-postgres \
+  --restart unless-stopped \
+  -e POSTGRES_DB=jcourse \
+  -e POSTGRES_USER=jcourse \
+  -e POSTGRES_PASSWORD=your_secure_password \
+  -p 5432:5432 \
+  -v jcourse-db-data:/var/lib/postgresql/data \
+  postgres:16
+
+# 验证容器运行
+docker ps | grep jcourse-postgres
+
+# 查看日志
+docker logs jcourse-postgres
+```
+
+**或者使用传统方式安装 PostgreSQL：**
+```bash
+# 安装 PostgreSQL
+sudo apt install -y postgresql postgresql-contrib
+
 # 切换到 postgres 用户
 sudo -u postgres psql
 
