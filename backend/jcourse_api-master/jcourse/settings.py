@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'huey.contrib.djhuey',
     'jcourse_api',
     'rest_framework',
@@ -59,6 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # 'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -66,7 +68,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'oauth.middlewares.LastSeenAtMiddleware',
     'jcourse_api.middleware.VisitorTrackingMiddleware',
     # 'django_prometheus.middleware.PrometheusAfterMiddleware',
@@ -217,6 +218,8 @@ CORS_ORIGIN_WHITELIST = [
     'http://swufe.tech',
     'https://swufe.tech',
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 
