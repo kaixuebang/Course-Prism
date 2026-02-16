@@ -14,7 +14,7 @@ const RegisterPage = () => {
   const [form] = Form.useForm();
   const [time, setTime] = useState<number>(0);
   const [isRegistered, setIsRegistered] = useState(false);
-  const timeRef = useRef<any>();
+  const timeRef = useRef<any>(null);
   const inCounter = time != 0;
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
